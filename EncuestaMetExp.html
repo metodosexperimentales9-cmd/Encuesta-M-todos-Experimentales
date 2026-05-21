@@ -727,8 +727,8 @@ async function submitSurvey() {
   console.log('IP:', responses.ip);
   console.log('User Agent:', responses.user_agent);
   
-  // === NUEVA URL DE GOOGLE SCRIPT ===
-  const SHEETS_URL = 'https://script.google.com/macros/s/AKfycbzNzv5vqywwgEFaBs2DBOMV5I9HBS-pFO5lPAnEsxh1SPC3tjeeFpRjNRsFxxOKShXosw/exec';
+  // *** URL ACTUALIZADA DE GOOGLE SCRIPT ***
+  const SHEETS_URL = 'https://script.google.com/macros/s/AKfycbwYcN-pm4Ym6lATck6o2UD8lL7jYiBjcnx1pBiFDtfGT5DMulhMVguCqQJ-X3jjy6AD_A/exec';
   const btnEnviar = document.querySelector('button[onclick="submitSurvey()"]');
   if (btnEnviar) { btnEnviar.disabled = true; btnEnviar.textContent = 'Enviando...'; }
 
@@ -817,4 +817,4 @@ function init() {
 init();
 </script>
 </body>
-</html> 
+</html>
