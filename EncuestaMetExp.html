@@ -158,7 +158,7 @@
       <div class="question"><div class="question-text">¿Con qué género te identificas?</div><div class="options"><label class="option"><input type="radio" name="genero" value="masculino"> Masculino</label><label class="option"><input type="radio" name="genero" value="femenino"> Femenino</label><label class="option"><input type="radio" name="genero" value="no_binario"> No binario</label><label class="option"><input type="radio" name="genero" value="prefiero_no"> Prefiero no responder</label></div></div>
       <div class="divider"></div>
       
-      <!-- NUEVA PREGUNTA: ESTADO DE RESIDENCIA -->
+      <!-- PREGUNTA: ESTADO DE RESIDENCIA -->
       <div class="question">
         <div class="question-text">¿En dónde reside actualmente?</div>
         <select id="estado_residencia" class="text-input">
@@ -770,8 +770,8 @@ async function submitSurvey() {
   console.log('IP:', responses.ip);
   console.log('User Agent:', responses.user_agent);
   
-  // *** NUEVA URL DE GOOGLE SCRIPT - ACTUALIZADA (LA QUE PROPORCIONASTE) ***
-  const SHEETS_URL = 'https://script.google.com/macros/s/AKfycbz4Sne-0uBtSMshVIpw2nNt351FCwJE3el5KWo6wRZq0Nqmil4Ix_7ikmIoIEU_ugS_dg/exec';
+  // *** URL ACTUALIZADA - NUEVA QUE PROPORCIONASTE ***
+  const SHEETS_URL = 'https://script.google.com/macros/s/AKfycbzfJwuE2uR-espQkcA6D3DpoZ9uH6q9Cee62N5MHhtv5HNAp4324CoZ664g_T1eCMuvEg/exec';
   const btnEnviar = document.querySelector('button[onclick="submitSurvey()"]');
   if (btnEnviar) { btnEnviar.disabled = true; btnEnviar.textContent = 'Enviando...'; }
 
