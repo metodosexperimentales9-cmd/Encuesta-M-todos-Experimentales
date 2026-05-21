@@ -1,0 +1,855 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Alfabetización financiera y susceptibilidad al sentimiento</title>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0e17;
+    --surface: #111827;
+    --surface2: #1a2235;
+    --border: #1e2d45;
+    --accent: #3b82f6;
+    --accent2: #10b981;
+    --danger: #ef4444;
+    --text: #e2e8f0;
+    --text-muted: #64748b;
+    --text-dim: #94a3b8;
+    --radius: 12px;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Montserrat', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; line-height: 1.6; }
+  #progress-bar { position: fixed; top: 0; left: 0; height: 3px; background: linear-gradient(90deg, var(--accent), var(--accent2)); transition: width 0.4s ease; z-index: 1000; }
+  .header { padding: 20px 32px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 12px; background: rgba(10,14,23,0.95); backdrop-filter: blur(10px); position: sticky; top: 0; z-index: 100; }
+  .header-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); animation: pulse 2s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+  .header h1 { font-size: 14px; font-weight: 500; color: var(--text-dim); letter-spacing: 0.05em; text-transform: uppercase; }
+  .container { max-width: 800px; margin: 0 auto; padding: 40px 20px 80px; }
+  .screen { display: none; animation: fadeIn 0.4s ease; }
+  .screen.active { display: block; }
+  @keyframes fadeIn { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:translateY(0)} }
+  .section-label { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--accent); letter-spacing: 0.15em; text-transform: uppercase; margin-bottom: 8px; }
+  .section-title { font-size: 26px; font-weight: 700; margin-bottom: 8px; line-height: 1.3; }
+  .section-desc { color: var(--text-dim); font-size: 15px; margin-bottom: 32px; }
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; margin-bottom: 20px; }
+  .question { margin-bottom: 28px; }
+  .question-text { font-size: 15px; font-weight: 500; margin-bottom: 14px; color: var(--text); }
+  .options { display: flex; flex-direction: column; gap: 8px; }
+  .option { display: flex; align-items: center; gap: 12px; padding: 12px 16px; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; cursor: pointer; transition: all 0.2s; font-size: 14px; }
+  .option:hover { border-color: var(--accent); background: rgba(59,130,246,0.05); }
+  .option input { accent-color: var(--accent); width: 16px; height: 16px; cursor: pointer; }
+  .text-input { width: 100%; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 12px 16px; color: var(--text); font-family: 'Montserrat', sans-serif; font-size: 14px; outline: none; }
+  .text-input:focus { border-color: var(--accent); }
+  .slider { width: 100%; accent-color: var(--accent); height: 6px; cursor: pointer; margin-top: 10px; }
+  .likert-container { overflow-x: auto; margin-top: 16px; }
+  .likert-table { width: 100%; border-collapse: collapse; min-width: 600px; }
+  .likert-table th { font-size: 12px; color: var(--text-muted); font-weight: 500; padding: 10px 6px; text-align: center; background: var(--surface2); }
+  .likert-table td { padding: 12px 6px; border-top: 1px solid var(--border); font-size: 13px; }
+  .likert-table td:first-child { text-align: left; color: var(--text-dim); width: 55%; }
+  .likert-table td:not(:first-child) { text-align: center; width: 9%; }
+  .likert-table input[type=radio] { accent-color: var(--accent); width: 16px; height: 16px; cursor: pointer; transform: scale(1.2); }
+  .tweet-card { background: #fff; border-radius: 12px; padding: 16px; margin-bottom: 20px; color: #0f1419; border: 1px solid #eff3f4; }
+  .tweet-header { display: flex; gap: 10px; align-items: center; margin-bottom: 10px; }
+  .tweet-avatar { width: 40px; height: 40px; border-radius: 50%; background: #1d9bf0; display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; font-size: 16px; }
+  .tweet-user { font-weight: 700; font-size: 14px; }
+  .tweet-handle { color: #536471; font-size: 13px; }
+  .tweet-text { font-size: 14px; line-height: 1.6; margin-bottom: 10px; }
+  .tweet-tags { color: #1d9bf0; font-size: 13px; margin-bottom: 6px; }
+  .tweet-stats { display: flex; gap: 16px; margin: 10px 0; color: #536471; font-size: 13px; }
+  .tweet-time { color: #536471; font-size: 12px; border-top: 1px solid #eff3f4; padding-top: 10px; margin-top: 5px; }
+  .allocation-section { margin-bottom: 24px; }
+  .allocation-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+  .allocation-label { font-size: 14px; font-weight: 500; }
+  .allocation-value { font-family: 'JetBrains Mono', monospace; font-size: 18px; font-weight: 700; color: var(--accent); }
+  .allocation-total { display: flex; justify-content: space-between; align-items: center; padding: 14px 18px; background: var(--surface2); border-radius: 8px; margin-top: 16px; border: 1px solid var(--border); }
+  .total-label { font-size: 13px; color: var(--text-dim); }
+  .total-value { font-family: 'JetBrains Mono', monospace; font-size: 20px; font-weight: 700; color: var(--accent2); }
+  .info-box { background: rgba(59,130,246,0.08); border: 1px solid rgba(59,130,246,0.25); border-radius: 8px; padding: 16px 20px; font-size: 14px; color: var(--text-dim); margin-bottom: 20px; line-height: 1.7; }
+  .info-box strong { color: var(--text); }
+  .btn { display: inline-flex; align-items: center; gap: 8px; padding: 14px 28px; border-radius: 8px; font-family: 'Montserrat', sans-serif; font-size: 14px; font-weight: 600; cursor: pointer; border: none; transition: all 0.2s; }
+  .btn-primary { background: var(--accent); color: white; }
+  .btn-primary:hover { background: #2563eb; transform: translateY(-1px); }
+  .btn-primary:disabled { background: var(--border); color: var(--text-muted); cursor: not-allowed; transform: none; }
+  .btn-outline { background: transparent; color: var(--text-dim); border: 1px solid var(--border); }
+  .btn-outline:hover { border-color: var(--accent); color: var(--accent); }
+  .btn-row { display: flex; gap: 12px; margin-top: 32px; flex-wrap: wrap; }
+  .divider { height: 1px; background: var(--border); margin: 24px 0; }
+  .hero { text-align: center; padding: 60px 20px; }
+  .hero-badge { display: inline-block; background: rgba(59,130,246,0.12); border: 1px solid rgba(59,130,246,0.3); color: var(--accent); padding: 6px 16px; border-radius: 20px; font-size: 12px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 24px; font-family: 'JetBrains Mono', monospace; }
+  .hero h1 { font-size: 36px; font-weight: 700; line-height: 1.2; margin-bottom: 16px; }
+  .hero h1 span { color: var(--accent); }
+  .hero p { font-size: 16px; color: var(--text-dim); max-width: 480px; margin: 0 auto 36px; line-height: 1.7; }
+  .hero-meta { display: flex; justify-content: center; gap: 32px; margin-bottom: 40px; flex-wrap: wrap; }
+  .hero-meta-item { text-align: center; }
+  .hero-meta-item .val { font-size: 22px; font-weight: 700; color: var(--accent); font-family: 'JetBrains Mono', monospace; }
+  .hero-meta-item .lbl { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+  .asset-info { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px; }
+  .asset-card { background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 14px; }
+  .asset-name { font-size: 13px; font-weight: 600; margin-bottom: 8px; }
+  .asset-stat { font-size: 12px; color: var(--text-muted); margin-bottom: 4px; }
+  .asset-stat span { color: var(--text-dim); font-family: 'JetBrains Mono', monospace; }
+  .up { color: var(--accent2) !important; }
+  .down { color: var(--danger) !important; }
+  .thankyou { text-align: center; padding: 60px 20px; }
+  .thankyou-icon { font-size: 64px; margin-bottom: 24px; }
+  .thankyou h2 { font-size: 28px; font-weight: 700; margin-bottom: 12px; }
+  .thankyou p { color: var(--text-dim); font-size: 15px; max-width: 400px; margin: 0 auto; }
+  .results-card { background: linear-gradient(135deg, var(--surface), var(--surface2)); border: 1px solid var(--accent); border-radius: var(--radius); padding: 30px; margin: 20px 0; text-align: center; }
+  .results-card .amount { font-size: 36px; font-weight: 700; font-family: 'JetBrains Mono', monospace; margin: 15px 0; }
+  .results-card .positive { color: var(--accent2); }
+  .results-card .negative { color: var(--danger); }
+  .results-detail { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 20px; text-align: left; }
+  .results-detail-item { background: var(--surface); padding: 15px; border-radius: 8px; }
+  .other-field { margin-top: 12px; margin-left: 0; }
+  .other-field input { width: 100%; max-width: 350px; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 10px 14px; color: var(--text); font-size: 14px; }
+  @media (max-width: 600px) { .asset-info { grid-template-columns: 1fr; } .hero h1 { font-size: 26px; } .section-title { font-size: 22px; } .likert-table td:first-child { width: 45%; } .results-detail { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+
+<div id="progress-bar" style="width:0%"></div>
+
+<div class="header">
+  <div class="header-dot"></div>
+  <h1>Alfabetización financiera y susceptibilidad al sentimiento</h1>
+</div>
+
+<div class="container">
+
+  <!-- SCREEN 0: WELCOME -->
+  <div class="screen active" id="screen-0">
+    <div class="hero">
+      <div class="hero-badge">Estudio de investigación</div>
+      <h1>Alfabetización financiera y susceptibilidad al <span>sentimiento</span> en decisiones de inversión</h1>
+      <p>Participa en este experimento académico sobre el impacto del sentimiento de noticias en los mercados financieros.</p>
+      
+      <div class="hero-meta">
+        <div class="hero-meta-item"><div class="val">~10</div><div class="lbl">minutos</div></div>
+        <div class="hero-meta-item"><div class="val">100%</div><div class="lbl">anónimo</div></div>
+        <div class="hero-meta-item"><div class="val">Gratis</div><div class="lbl">sin registro</div></div>
+      </div>
+      <button class="btn btn-primary" id="startButton">Comenzar →</button>
+    </div>
+  </div>
+
+  <!-- SCREEN 1: CONSENT -->
+  <div class="screen" id="screen-1">
+    <div class="section-label">Sección 1 de 8</div>
+    <div class="section-title">Consentimiento informado</div>
+    <div class="section-desc">Antes de comenzar, por favor lee y acepta lo siguiente.</div>
+    <div class="info-box">Este estudio es <strong>voluntario, anónimo</strong> y con fines exclusivamente académicos. Los datos recopilados serán utilizados únicamente para investigación y no serán compartidos con terceros.</div>
+    <div class="question"><div class="question-text">¿Eres mayor de 18 años?</div><div class="options"><label class="option"><input type="radio" name="edad_consent" value="si" id="edad_consent_si"> Sí, soy mayor de 18 años</label></div></div>
+    <div class="question"><div class="question-text">¿Aceptas participar en este estudio?</div><div class="options"><label class="option"><input type="radio" name="consentimiento" value="si" id="consentimiento_si"> Sí, acepto participar</label><label class="option"><input type="radio" name="consentimiento" value="no" id="consentimiento_no"> No, prefiero no participar</label></div></div>
+    
+    <div class="btn-row"><button class="btn btn-primary" id="btn-consent" disabled>Continuar →</button></div>
+  </div>
+
+  <!-- SCREEN 2: SOCIODEMOGRAPHIC -->
+  <div class="screen" id="screen-2">
+    <div class="section-label">Sección 2 de 8</div>
+    <div class="section-title">Perfil sociodemográfico</div>
+    <div class="section-desc">Cuéntanos un poco sobre ti.</div>
+    <div class="card">
+      <div class="question"><div class="question-text">¿Cuántos años tienes?</div><input type="number" class="text-input" id="edad" placeholder="Ej: 22" min="18" max="99"></div>
+      <div class="divider"></div>
+      <div class="question"><div class="question-text">¿Con qué género te identificas?</div><div class="options"><label class="option"><input type="radio" name="genero" value="masculino"> Masculino</label><label class="option"><input type="radio" name="genero" value="femenino"> Femenino</label><label class="option"><input type="radio" name="genero" value="no_binario"> No binario</label><label class="option"><input type="radio" name="genero" value="prefiero_no"> Prefiero no responder</label></div></div>
+      <div class="divider"></div>
+      
+      <div class="question"><div class="question-text">¿Qué licenciatura estudias?</div>
+        <div class="options">
+          <label class="option"><input type="radio" name="licenciatura" value="administracion_financiera"> Administración Financiera</label>
+          <label class="option"><input type="radio" name="licenciatura" value="economia"> Economía</label>
+          <label class="option"><input type="radio" name="licenciatura" value="otra" id="licenciatura_otra"> Otra</label>
+        </div>
+        <div id="licenciatura_otro_container" class="other-field" style="display:none;">
+          <input type="text" class="text-input" id="licenciatura_otro" placeholder="Especifica tu licenciatura">
+        </div>
+      </div>
+      <div class="divider"></div>
+      
+      <div class="question"><div class="question-text">¿Qué semestre cursas actualmente?</div>
+        <div class="options">
+          <label class="option"><input type="radio" name="semestre_num" value="1"> 1° semestre</label>
+          <label class="option"><input type="radio" name="semestre_num" value="2"> 2° semestre</label>
+          <label class="option"><input type="radio" name="semestre_num" value="3"> 3° semestre</label>
+          <label class="option"><input type="radio" name="semestre_num" value="4"> 4° semestre</label>
+          <label class="option"><input type="radio" name="semestre_num" value="5"> 5° semestre</label>
+          <label class="option"><input type="radio" name="semestre_num" value="6"> 6° semestre</label>
+          <label class="option"><input type="radio" name="semestre_num" value="7"> 7° semestre</label>
+          <label class="option"><input type="radio" name="semestre_num" value="8"> 8° semestre</label>
+          <label class="option"><input type="radio" name="semestre_num" value="9"> 9° semestre</label>
+          <label class="option"><input type="radio" name="semestre_num" value="10"> 10° semestre</label>
+          <label class="option"><input type="radio" name="semestre_num" value="otro" id="semestre_num_otro"> Otro</label>
+        </div>
+        <div id="semestre_num_otro_container" class="other-field" style="display:none;">
+          <input type="number" class="text-input" id="semestre_num_otro_input" placeholder="¿Cuál semestre?" min="1" max="12">
+        </div>
+      </div>
+      <div class="divider"></div>
+      
+      <div class="question"><div class="question-text">¿Realizas actualmente alguna actividad remunerada?</div>
+        <div class="options">
+          <label class="option"><input type="radio" name="actividad_remunerada" value="si"> Sí</label>
+          <label class="option"><input type="radio" name="actividad_remunerada" value="no"> No</label>
+        </div>
+      </div>
+      <div class="divider"></div>
+      
+      <div class="question"><div class="question-text">¿Tienes personas que dependen económicamente de ti?</div>
+        <div class="options">
+          <label class="option"><input type="radio" name="dependientes" value="si"> Sí</label>
+          <label class="option"><input type="radio" name="dependientes" value="no"> No</label>
+        </div>
+      </div>
+      <div class="divider"></div>
+      
+      <div class="question"><div class="question-text">En una semana típica, ¿con qué frecuencia revisas noticias sobre economía o mercados financieros?</div>
+        <div class="options">
+          <label class="option"><input type="radio" name="frecuencia_noticias" value="nunca"> Nunca</label>
+          <label class="option"><input type="radio" name="frecuencia_noticias" value="1_vez_semana"> Una vez a la semana o menos</label>
+          <label class="option"><input type="radio" name="frecuencia_noticias" value="2_3_veces"> 2 o 3 veces por semana</label>
+          <label class="option"><input type="radio" name="frecuencia_noticias" value="casi_todos"> Casi todos los días</label>
+          <label class="option"><input type="radio" name="frecuencia_noticias" value="todos"> Todos los días</label>
+        </div>
+      </div>
+      <div class="divider"></div>
+      
+      <div class="question"><div class="question-text">¿En qué tipo de universidad estudias?</div><div class="options"><label class="option"><input type="radio" name="universidad" value="publica"> Pública</label><label class="option"><input type="radio" name="universidad" value="privada"> Privada</label></div></div>
+      <div class="divider"></div>
+      <div class="question"><div class="question-text">¿Cuál es tu fuente principal para informarte sobre temas financieros o inversión?</div><div class="options"><label class="option"><input type="radio" name="fuente" value="redes_sociales"> Redes sociales</label><label class="option"><input type="radio" name="fuente" value="medios_tradicionales"> Medios tradicionales</label><label class="option"><input type="radio" name="fuente" value="webs_especializadas"> Páginas web especializadas</label><label class="option"><input type="radio" name="fuente" value="familiares_amigos"> Familiares o amigos</label><label class="option"><input type="radio" name="fuente" value="no_informo"> No suelo informarme</label></div></div>
+      <div class="divider"></div>
+      <div class="question"><div class="question-text">¿Cuál describe mejor el concepto de 'cuentas automatizadas' (bots)?</div><div class="options"><label class="option"><input type="radio" name="bots" value="programas"> Programas que publican automáticamente</label><label class="option"><input type="radio" name="bots" value="personas"> Personas que publican mucho</label><label class="option"><input type="radio" name="bots" value="periodistas"> Periodistas especializados</label><label class="option"><input type="radio" name="bots" value="no_claro"> No lo tengo claro</label></div></div>
+      <div class="divider"></div>
+      <div class="question"><div class="question-text">¿Cómo describirías tu tolerancia al riesgo en tus inversiones?</div>
+        <div class="options">
+          <label class="option"><input type="radio" name="riesgo_antes" value="muy_baja"> Muy baja</label>
+          <label class="option"><input type="radio" name="riesgo_antes" value="baja"> Baja</label>
+          <label class="option"><input type="radio" name="riesgo_antes" value="media"> Media</label>
+          <label class="option"><input type="radio" name="riesgo_antes" value="alta"> Alta</label>
+          <label class="option"><input type="radio" name="riesgo_antes" value="muy_alta"> Muy alta</label>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="question-text" style="margin-bottom:16px">Indica tu nivel de acuerdo (1 = Totalmente desacuerdo, 5 = Totalmente acuerdo)</div>
+      <div class="likert-container">
+        <table class="likert-table">
+          <thead>
+            <tr><th style="text-align:left">Afirmación</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th></tr>
+          </thead>
+          <tbody id="likert-body"></tbody>
+        </table>
+      </div>
+    </div>
+    <div class="btn-row"><button class="btn btn-outline" onclick="goTo(1)">← Atrás</button><button class="btn btn-primary" onclick="goTo(3)">Continuar →</button></div>
+  </div>
+
+  <!-- SCREEN 3: INSTRUCTIONS -->
+  <div class="screen" id="screen-3">
+    <div class="section-label">Sección 3 de 8</div>
+    <div class="section-title">Instrucciones del experimento</div>
+    <div class="info-box">
+      <strong>¿En qué consiste?</strong><br><br>
+      Recibirás una dotación <strong>hipotética</strong> de <strong>$100 dólares</strong> para invertir. Verás una publicación de redes sociales y la información financiera básica de dos activos.<br><br>
+      <strong>Opciones de inversión:</strong><br>
+      • <strong>Activo A</strong>: Activo de riesgo<br>
+      • <strong>Activo B</strong>: Activo libre de riesgo y renta fija (CETES)<br><br>
+      <strong>Reglas de asignación:</strong><br>
+      Debes asignar el <strong>100% de tus $100</strong> entre ambos activos usando el deslizador.<br>
+      Puedes elegir <strong>cualquier porcentaje</strong> del 0 al 100 para el Activo A, y el resto se asignará automáticamente al Activo B.<br><br>
+      <strong>Ejemplo:</strong> Si eliges 65% en Activo A, automáticamente se asigna 35% al Activo B.
+    </div>
+    <div class="card">
+      <div class="question-text">Pregunta de comprensión</div>
+      <div style="color:var(--text-dim);font-size:14px;margin-bottom:14px">Si asignas 75% al Activo A, ¿cuánto se asigna al Activo B?</div>
+      <div class="options">
+        <label class="option"><input type="radio" name="comprension" value="25"> 25%</label>
+        <label class="option"><input type="radio" name="comprension" value="75"> 75%</label>
+        <label class="option"><input type="radio" name="comprension" value="100"> 100%</label>
+      </div>
+    </div>
+    <div class="btn-row"><button class="btn btn-outline" onclick="goTo(2)">← Atrás</button><button class="btn btn-primary" onclick="goTo(4)">Continuar →</button></div>
+  </div>
+
+  <!-- SCREEN 4: TREATMENT VOO -->
+  <div class="screen" id="screen-4">
+    <div class="section-label">Sección 4 de 8</div>
+    <div class="section-title">Experimento de inversión - VOO</div>
+    <div class="section-desc">Al navegar por redes sociales te encuentras con lo siguiente:</div>
+
+    <div style="margin-bottom: 40px;">
+      <div id="tweet-voo" class="tweet-card"></div>
+      <div class="divider"></div>
+      <div class="asset-info" id="asset-info-container-voo"></div>
+      <div class="card">
+        <div class="question-text" style="margin-bottom:18px">¿Cómo asignas tus $100 para VOO?</div>
+        <div class="allocation-section">
+          <div class="allocation-header"><div class="allocation-label" id="asset-a-label-voo">Activo A (VOO)</div><div class="allocation-value"><span id="val-a-voo">50</span>%</div></div>
+          <input type="range" class="slider" id="slider-a-voo" min="0" max="100" value="50" oninput="updateVooAllocation(this.value)">
+        </div>
+        <div class="allocation-section">
+          <div class="allocation-header"><div class="allocation-label" id="asset-b-label-voo">Activo B (CETES)</div><div class="allocation-value"><span id="val-b-voo">50</span>%</div></div>
+        </div>
+        <div class="allocation-total"><div class="total-label">Total asignado</div><div class="total-value" id="total-display-voo">$100</div></div>
+      </div>
+    </div>
+
+    <div class="btn-row"><button class="btn btn-outline" onclick="goTo(3)">← Atrás</button><button class="btn btn-primary" onclick="goTo(5)">Continuar →</button></div>
+  </div>
+
+  <!-- SCREEN 5: RESET ENTRE TRATAMIENTOS -->
+  <div class="screen" id="screen-5">
+    <div class="section-label">Sección 5 de 8</div>
+    <div class="section-title">Siguiente activo</div>
+    <div class="info-box" style="text-align: center;">
+      <strong>🔄 Ahora pasarás al segundo activo 🔄</strong><br><br>
+      Tus decisiones anteriores <strong>no afectan</strong> esta nueva asignación.<br>
+      Vuelve a revisar la información y la noticia antes de invertir tus $100.
+    </div>
+    <div class="btn-row"><button class="btn btn-primary" onclick="goTo(6)">Continuar →</button></div>
+  </div>
+
+  <!-- SCREEN 6: TREATMENT BTC -->
+  <div class="screen" id="screen-6">
+    <div class="section-label">Sección 6 de 8</div>
+    <div class="section-title">Experimento de inversión - Bitcoin</div>
+    <div class="section-desc">Al navegar por redes sociales te encuentras con lo siguiente:</div>
+
+    <div style="margin-bottom: 40px;">
+      <div id="tweet-btc" class="tweet-card"></div>
+      <div class="divider"></div>
+      <div class="asset-info" id="asset-info-container-btc"></div>
+      <div class="card">
+        <div class="question-text" style="margin-bottom:18px">¿Cómo asignas tus $100 para Bitcoin?</div>
+        <div class="allocation-section">
+          <div class="allocation-header"><div class="allocation-label" id="asset-a-label-btc">Activo A (Bitcoin)</div><div class="allocation-value"><span id="val-a-btc">50</span>%</div></div>
+          <input type="range" class="slider" id="slider-a-btc" min="0" max="100" value="50" oninput="updateBtcAllocation(this.value)">
+        </div>
+        <div class="allocation-section">
+          <div class="allocation-header"><div class="allocation-label" id="asset-b-label-btc">Activo B (CETES)</div><div class="allocation-value"><span id="val-b-btc">50</span>%</div></div>
+        </div>
+        <div class="allocation-total"><div class="total-label">Total asignado</div><div class="total-value" id="total-display-btc">$100</div></div>
+      </div>
+    </div>
+
+    <div class="btn-row"><button class="btn btn-outline" onclick="goTo(4)">← Atrás</button><button class="btn btn-primary" onclick="goTo(7)">Continuar →</button></div>
+  </div>
+
+  <!-- SCREEN 7: REFLEXIÓN -->
+  <div class="screen" id="screen-7">
+    <div class="section-label">Sección 7 de 8</div>
+    <div class="section-title">Reflexión final</div>
+    <div class="section-desc">Últimas preguntas sobre tu experiencia.</div>
+    <div class="card">
+      <div class="question"><div class="question-text">¿En qué medida la publicación influyó en tu decisión?</div><div class="options"><label class="option"><input type="radio" name="influencia" value="nada"> Nada</label><label class="option"><input type="radio" name="influencia" value="poco"> Poco</label><label class="option"><input type="radio" name="influencia" value="moderadamente"> Moderadamente</label><label class="option"><input type="radio" name="influencia" value="bastante"> Bastante</label><label class="option"><input type="radio" name="influencia" value="totalmente"> Totalmente</label></div></div>
+      <div class="divider"></div>
+      <div class="question"><div class="question-text">¿Qué tan confiable te pareció la publicación?</div><div class="options"><label class="option"><input type="radio" name="confianza_tweet" value="nada"> Nada confiable</label><label class="option"><input type="radio" name="confianza_tweet" value="poco"> Poco confiable</label><label class="option"><input type="radio" name="confianza_tweet" value="moderado"> Moderado</label><label class="option"><input type="radio" name="confianza_tweet" value="muy"> Muy confiable</label><label class="option"><input type="radio" name="confianza_tweet" value="total"> Totalmente confiable</label></div></div>
+      <div class="divider"></div>
+      <div class="question"><div class="question-text">¿Experiencia previa invirtiendo?</div><div class="options"><label class="option"><input type="radio" name="experiencia" value="nunca"> Nunca</label><label class="option"><input type="radio" name="experiencia" value="menos_1"> Menos de 1 año</label><label class="option"><input type="radio" name="experiencia" value="1_3"> 1-3 años</label><label class="option"><input type="radio" name="experiencia" value="mas_3"> Más de 3 años</label></div></div>
+      <div class="divider"></div>
+      <div class="question"><div class="question-text">¿Cómo describirías tu tolerancia al riesgo en tus inversiones después del experimento?</div>
+        <div class="options">
+          <label class="option"><input type="radio" name="riesgo_despues" value="muy_baja"> Muy baja</label>
+          <label class="option"><input type="radio" name="riesgo_despues" value="baja"> Baja</label>
+          <label class="option"><input type="radio" name="riesgo_despues" value="media"> Media</label>
+          <label class="option"><input type="radio" name="riesgo_despues" value="alta"> Alta</label>
+          <label class="option"><input type="radio" name="riesgo_despues" value="muy_alta"> Muy alta</label>
+        </div>
+      </div>
+    </div>
+    <div class="btn-row"><button class="btn btn-outline" onclick="goTo(6)">← Atrás</button><button class="btn btn-primary" onclick="calculateResults()">Ver resultados →</button></div>
+  </div>
+
+  <!-- SCREEN 8: RESULTS SIMULATION -->
+  <div class="screen" id="screen-8">
+    <div class="section-label">Sección 8 de 8</div>
+    <div class="section-title">Resultados de tu inversión</div>
+    <div class="section-desc">Simulación basada en retornos históricos</div>
+    
+    <div class="results-card" id="results-card">
+      <div style="font-size: 18px; font-weight: 600;">📊 Rendimiento de tu cartera</div>
+      <div id="total-amount" class="amount">$0</div>
+      <div id="return-percent" style="font-size: 14px; opacity: 0.8;">Rendimiento: 0%</div>
+      
+      <div class="results-detail">
+        <div class="results-detail-item">
+          <div style="font-weight: 600; margin-bottom: 10px;">💰 VOO (S&P 500)</div>
+          <div>Inversión: <span id="voo-investment">$0</span></div>
+          <div>Rendimiento: <span id="voo-return-pct">0%</span></div>
+          <div>Valor final: <span id="voo-final">$0</span></div>
+        </div>
+        <div class="results-detail-item">
+          <div style="font-weight: 600; margin-bottom: 10px;">₿ Bitcoin (BTC)</div>
+          <div>Inversión: <span id="btc-investment">$0</span></div>
+          <div>Rendimiento: <span id="btc-return-pct">0%</span></div>
+          <div>Valor final: <span id="btc-final">$0</span></div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="info-box" style="margin-top: 20px;">
+      📈 Los resultados se generan según el rendimiento histórico de cada activo.<br>
+      • VOO (S&P 500): Rendimiento esperado ~10% anual (rango típico -5% a +25%)<br>
+      • Bitcoin: Rendimiento esperado ~12% anual (rango típico -2% a +26%)<br>
+      • CETES: Rendimiento fijo +6% anual<br>
+      <strong>Los retornos finales son una simulación basada en datos históricos.</strong>
+    </div>
+    
+    <div class="btn-row"><button class="btn btn-outline" onclick="goTo(7)">← Atrás</button><button class="btn btn-primary" onclick="submitSurvey()">Finalizar estudio →</button></div>
+  </div>
+
+  <!-- SCREEN 9: THANK YOU -->
+  <div class="screen" id="screen-9">
+    <div class="thankyou">
+      <div class="thankyou-icon">✅</div>
+      <h2>¡Gracias por participar!</h2>
+      <p>Tus respuestas han sido registradas. Tu contribución es muy valiosa para esta investigación.</p>
+    </div>
+  </div>
+</div>
+
+<script>
+// NOTICIAS (EMPAREJADAS: mismo tipo para VOO y BTC)
+const TWEETS = {
+  positivo: { 
+    user: "Mercados Hoy MX ✓", handle: "@MercadosHoyMX", 
+    text: "📈 EXCLUSIVA: El Pentágono adjudica contrato de IA por <strong>$40,000 MDD</strong> a Microsoft y Google. Analistas lo califican como el mayor acuerdo tech de la historia. Las Big Tech ya representan el 29% del $VOO. 💰",
+    tags: "#Microsoft #Google #SP500 #VOO #BigTech #IA",
+    time: "8:47 · 3 may. 2026",
+    likes: "12.5K",
+    retweets: "3.2K"
+  },
+  negativo: { 
+    user: "Mercados Hoy MX ✓", handle: "@MercadosHoyMX", 
+    text: "📉 ESCÁNDALO: CEO de Tesla citado ante el Congreso por manipulación de contratos federales. La Casa Blanca anuncia aranceles del <strong>35%</strong> a semiconductores asiáticos — golpeando directo a Nvidia, Apple y Qualcomm, las 3 mayores posiciones del $VOO.",
+    tags: "#Tesla #Aranceles #SP500 #VOO #Escándalo",
+    time: "8:47 · 3 may. 2026",
+    likes: "8.2K",
+    retweets: "2.1K"
+  },
+  neutral: { 
+    user: "Mercados Hoy MX ✓", handle: "@MercadosHoyMX", 
+    text: "📊 La Reserva Federal publicó hoy las minutas de su última reunión del FOMC. El documento detalla las deliberaciones sobre política monetaria del mes anterior. Se trata de una publicación de rutina programada 21 días después de cada reunión.",
+    tags: "#Fed #FOMC #VOO #SP500",
+    time: "8:47 · 3 may. 2026",
+    likes: "1.2K",
+    retweets: "342"
+  },
+  control: { 
+    user: "Mercados Hoy MX ✓", handle: "@MercadosHoyMX", 
+    text: "📊 La Reserva Federal publicó hoy las minutas de su última reunión del FOMC. El documento detalla las deliberaciones sobre política monetaria del mes anterior. Se trata de una publicación de rutina programada 21 días después de cada reunión.",
+    tags: "#Fed #FOMC #VOO #SP500",
+    time: "8:47 · 3 may. 2026",
+    likes: "1.2K",
+    retweets: "342"
+  }
+};
+
+const TWEETS_BTC = {
+  positivo: { 
+    user: "Mercados Hoy MX ✓", handle: "@MercadosHoyMX", 
+    text: "📈 HISTÓRICO: El Senado de EE.UU. aprueba por <strong>67 votos</strong> reconocer al $BTC como reserva estratégica nacional. BlackRock y Fidelity anuncian DUPLICAR posiciones en sus ETFs de Bitcoin. \"El mayor respaldo institucional de la historia del cripto\" — CEO de Coinbase. 💰",
+    tags: "#Bitcoin #BTC #Senado #ReservaEstrategica #Histórico",
+    time: "10:30 · 5 may. 2026",
+    likes: "24.3K",
+    retweets: "7.8K"
+  },
+  negativo: { 
+    user: "Mercados Hoy MX ✓", handle: "@MercadosHoyMX", 
+    text: "📉 CATÁSTROFE: Binance suspende TODOS los retiros tras hackeo que comprometió <strong>$2,200 MDD</strong>. La SEC presenta cargos por fraude y lavado de dinero contra sus directivos. Autoridades de 6 países coordinan intervención urgente.",
+    tags: "#Binance #Bitcoin #BTC #SEC #Hackeo #Fraude",
+    time: "10:30 · 5 may. 2026",
+    likes: "15.7K",
+    retweets: "4.2K"
+  },
+  neutral: { 
+    user: "Mercados Hoy MX ✓", handle: "@MercadosHoyMX", 
+    text: "🏦 Coinbase publicó hoy su Informe de Transparencia del Q1 2026. El documento incluye el número de solicitudes gubernamentales atendidas y métricas operativas de la plataforma. Es una publicación trimestral de rutina desde 2020.",
+    tags: "#Coinbase #Bitcoin #BTC #Crypto #Transparencia",
+    time: "10:30 · 5 may. 2026",
+    likes: "892",
+    retweets: "156"
+  },
+  control: { 
+    user: "Mercados Hoy MX ✓", handle: "@MercadosHoyMX", 
+    text: "🏦 Coinbase publicó hoy su Informe de Transparencia del Q1 2026. El documento incluye el número de solicitudes gubernamentales atendidas y métricas operativas de la plataforma. Es una publicación trimestral de rutina desde 2020.",
+    tags: "#Coinbase #Bitcoin #BTC #Crypto #Transparencia",
+    time: "10:30 · 5 may. 2026",
+    likes: "892",
+    retweets: "156"
+  }
+};
+
+// Generar mismo sentimiento para ambas noticias
+const tweetTypes = ['positivo', 'negativo', 'neutral', 'control'];
+const selectedType = tweetTypes[Math.floor(Math.random() * 4)];
+const vooType = selectedType;
+const btcType = selectedType;
+
+let currentScreen = 0;
+const totalScreens = 10;
+const responses = { 
+  timestamp: new Date().toISOString(),
+  voo_noticia: vooType,
+  btc_noticia: btcType,
+  grupo: vooType
+};
+
+// Función mejorada para capturar IP con múltiples APIs de respaldo
+async function getIP() {
+  const apis = [
+    'https://api.ipify.org?format=json',
+    'https://api.my-ip.io/ip.json',
+    'https://ipapi.co/json/'
+  ];
+  
+  for (const api of apis) {
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 3000); // Timeout de 3 segundos
+      const response = await fetch(api, { mode: 'cors', signal: controller.signal });
+      clearTimeout(timeoutId);
+      const data = await response.json();
+      let ip = null;
+      if (data.ip) ip = data.ip;
+      else if (data.ip_address) ip = data.ip_address;
+      else if (data.ipv4) ip = data.ipv4;
+      else if (data.origin) ip = data.origin;
+      
+      if (ip && ip !== 'undefined' && ip !== 'null') {
+        console.log('IP capturada exitosamente:', ip);
+        return ip;
+      }
+    } catch (error) {
+      console.warn(`Error con API ${api}:`, error);
+    }
+  }
+  
+  // Fallback: intentar obtener IP local (solo funciona en algunos navegadores)
+  try {
+    const pc = new RTCPeerConnection({ iceServers: [] });
+    pc.createDataChannel('');
+    pc.createOffer().then(offer => pc.setLocalDescription(offer));
+    pc.onicecandidate = (event) => {
+      if (event.candidate) {
+        const ipRegex = /([0-9]{1,3}\.){3}[0-9]{1,3}/;
+        const match = ipRegex.exec(event.candidate.candidate);
+        if (match) {
+          const localIp = match[0];
+          console.log('IP local capturada (fallback):', localIp);
+          return localIp;
+        }
+      }
+    };
+  } catch (e) {
+    console.warn('No se pudo obtener IP local:', e);
+  }
+  
+  console.warn('No se pudo obtener IP, usando "no_disponible"');
+  return 'no_disponible';
+}
+
+function getUserAgent() {
+  return navigator.userAgent;
+}
+
+const LIKERT_ITEMS = [
+  "La información financiera en redes sociales suele ser confiable",
+  "Si muchas personas comparten una noticia financiera, tiendo a creerla",
+  "Suelo verificar en otras fuentes la información financiera que veo en redes",
+  "Las redes sociales pueden influir en los precios de activos financieros",
+  "Confío más en expertos tradicionales que en influencers financieros"
+];
+
+// Funciones de navegación
+function goTo(n) {
+  if (n < 0 || n >= totalScreens) return;
+  const currentDiv = document.getElementById('screen-' + currentScreen);
+  const nextDiv = document.getElementById('screen-' + n);
+  if (currentDiv) currentDiv.classList.remove('active');
+  if (nextDiv) nextDiv.classList.add('active');
+  currentScreen = n;
+  updateProgress();
+  window.scrollTo(0, 0);
+}
+
+function updateProgress() {
+  const pct = (currentScreen / (totalScreens - 1)) * 100;
+  const progressBar = document.getElementById('progress-bar');
+  if (progressBar) progressBar.style.width = pct + '%';
+}
+
+// Funciones de asignación
+function updateVooAllocation(val) {
+  const a = parseInt(val);
+  const b = 100 - a;
+  document.getElementById('val-a-voo').textContent = a;
+  document.getElementById('val-b-voo').textContent = b;
+}
+
+function updateBtcAllocation(val) {
+  const a = parseInt(val);
+  const b = 100 - a;
+  document.getElementById('val-a-btc').textContent = a;
+  document.getElementById('val-b-btc').textContent = b;
+}
+
+// Generar rendimiento aleatorio usando Box-Muller (distribución normal)
+function generateRandomReturn(mean, stdDev) {
+  let u = 0, v = 0;
+  while(u === 0) u = Math.random();
+  while(v === 0) v = Math.random();
+  const z = Math.sqrt(-2.0 * Math.log(u)) * Math.cos(2.0 * Math.PI * v);
+  return (mean + z * stdDev) / 100;
+}
+
+// Calcular resultados de la simulación
+function calculateResults() {
+  const vooA = parseInt(document.getElementById('val-a-voo').textContent) || 0;
+  const btcA = parseInt(document.getElementById('val-a-btc').textContent) || 0;
+  
+  const invVOO = vooA;
+  const invBTC = btcA;
+  
+  // Parámetros: media y desviación estándar (en porcentaje)
+  const vooMean = 10;
+  const vooStd = 15;
+  const btcMean = 12;
+  const btcStd = 14;
+  
+  const vooReturn = generateRandomReturn(vooMean, vooStd);
+  const btcReturn = generateRandomReturn(btcMean, btcStd);
+  
+  const vooFinal = invVOO * (1 + vooReturn);
+  const btcFinal = invBTC * (1 + btcReturn);
+  const totalFinal = vooFinal + btcFinal;
+  const totalReturn = ((totalFinal - 100) / 100) * 100;
+  
+  document.getElementById('voo-investment').textContent = `$${invVOO}`;
+  document.getElementById('btc-investment').textContent = `$${invBTC}`;
+  document.getElementById('voo-return-pct').innerHTML = vooReturn >= 0 ? `<span class="up">+${(vooReturn * 100).toFixed(2)}%</span>` : `<span class="down">${(vooReturn * 100).toFixed(2)}%</span>`;
+  document.getElementById('btc-return-pct').innerHTML = btcReturn >= 0 ? `<span class="up">+${(btcReturn * 100).toFixed(2)}%</span>` : `<span class="down">${(btcReturn * 100).toFixed(2)}%</span>`;
+  document.getElementById('voo-final').textContent = `$${vooFinal.toFixed(2)}`;
+  document.getElementById('btc-final').textContent = `$${btcFinal.toFixed(2)}`;
+  document.getElementById('total-amount').innerHTML = totalFinal >= 100 ? `<span class="positive">$${totalFinal.toFixed(2)}</span>` : `<span class="negative">$${totalFinal.toFixed(2)}</span>`;
+  document.getElementById('return-percent').innerHTML = totalReturn >= 0 ? `Rendimiento: <span class="positive">+${totalReturn.toFixed(2)}%</span>` : `Rendimiento: <span class="negative">${totalReturn.toFixed(2)}%</span>`;
+  
+  responses.voo_return = (vooReturn * 100).toFixed(2);
+  responses.btc_return = (btcReturn * 100).toFixed(2);
+  responses.final_amount = totalFinal.toFixed(2);
+  
+  goTo(8);
+}
+
+// Funciones de renderizado
+function renderTweet(containerId, tweetData) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+  container.innerHTML = `
+    <div class="tweet-header">
+      <div class="tweet-avatar">${tweetData.user.charAt(0)}</div>
+      <div>
+        <div class="tweet-user">${tweetData.user}</div>
+        <div class="tweet-handle">${tweetData.handle}</div>
+      </div>
+    </div>
+    <div class="tweet-text">${tweetData.text}</div>
+    <div class="tweet-tags">${tweetData.tags}</div>
+    <div class="tweet-stats">
+      <span>❤️ ${tweetData.likes}</span>
+      <span>🔁 ${tweetData.retweets}</span>
+    </div>
+    <div class="tweet-time">${tweetData.time}</div>
+  `;
+}
+
+function buildLikert() {
+  const tbody = document.getElementById('likert-body');
+  if (!tbody) return;
+  tbody.innerHTML = '';
+  LIKERT_ITEMS.forEach((item, i) => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td style="text-align:left">${item}</td>
+                    <td style="text-align:center"><input type="radio" name="likert_${i}" value="1"></td>
+                    <td style="text-align:center"><input type="radio" name="likert_${i}" value="2"></td>
+                    <td style="text-align:center"><input type="radio" name="likert_${i}" value="3"></td>
+                    <td style="text-align:center"><input type="radio" name="likert_${i}" value="4"></td>
+                    <td style="text-align:center"><input type="radio" name="likert_${i}" value="5"></td>`;
+    tbody.appendChild(tr);
+  });
+}
+
+// Funciones de formulario
+function toggleLicenciaturaOtro() {
+  const otraSelected = document.getElementById('licenciatura_otra').checked;
+  const container = document.getElementById('licenciatura_otro_container');
+  if (container) container.style.display = otraSelected ? 'block' : 'none';
+}
+
+function toggleSemestreNumOtro() {
+  const otroSelected = document.getElementById('semestre_num_otro').checked;
+  const container = document.getElementById('semestre_num_otro_container');
+  if (container) container.style.display = otroSelected ? 'block' : 'none';
+}
+
+function submitConsent() {
+  const edad = document.querySelector('input[name="edad_consent"]:checked');
+  const consent = document.querySelector('input[name="consentimiento"]:checked');
+  
+  if (!edad || !consent) {
+    alert('Por favor, responde todas las preguntas.');
+    return;
+  }
+  
+  if (consent.value === 'no') {
+    alert('Gracias por tu tiempo. El estudio requiere participación voluntaria.');
+    return;
+  }
+  
+  goTo(2);
+}
+
+async function submitSurvey() {
+  // Recoger todas las respuestas
+  responses.edad = document.getElementById('edad')?.value || '';
+  responses.genero = document.querySelector('input[name="genero"]:checked')?.value || '';
+  
+  let licenciatura = document.querySelector('input[name="licenciatura"]:checked')?.value || '';
+  if (licenciatura === 'otra') {
+    licenciatura = document.getElementById('licenciatura_otro')?.value || 'otra_no_especificada';
+  }
+  responses.licenciatura = licenciatura;
+  
+  let semestreNum = document.querySelector('input[name="semestre_num"]:checked')?.value || '';
+  if (semestreNum === 'otro') {
+    semestreNum = document.getElementById('semestre_num_otro_input')?.value || 'otro_no_especificado';
+  }
+  responses.semestre_num = semestreNum;
+  
+  responses.actividad_remunerada = document.querySelector('input[name="actividad_remunerada"]:checked')?.value || '';
+  responses.dependientes = document.querySelector('input[name="dependientes"]:checked')?.value || '';
+  responses.frecuencia_noticias = document.querySelector('input[name="frecuencia_noticias"]:checked')?.value || '';
+  responses.universidad = document.querySelector('input[name="universidad"]:checked')?.value || '';
+  responses.fuente = document.querySelector('input[name="fuente"]:checked')?.value || '';
+  responses.bots = document.querySelector('input[name="bots"]:checked')?.value || '';
+  responses.comprension = document.querySelector('input[name="comprension"]:checked')?.value || '';
+  responses.allocation_voo = document.getElementById('val-a-voo')?.textContent || '0';
+  responses.allocation_btc = document.getElementById('val-a-btc')?.textContent || '0';
+  responses.influencia = document.querySelector('input[name="influencia"]:checked')?.value || '';
+  responses.confianza_tweet = document.querySelector('input[name="confianza_tweet"]:checked')?.value || '';
+  responses.experiencia = document.querySelector('input[name="experiencia"]:checked')?.value || '';
+  responses.riesgo_antes = document.querySelector('input[name="riesgo_antes"]:checked')?.value || '';
+  responses.riesgo_despues = document.querySelector('input[name="riesgo_despues"]:checked')?.value || '';
+  
+  // Capturar IP y User Agent
+  responses.user_agent = getUserAgent();
+  responses.ip = await getIP();
+  
+  LIKERT_ITEMS.forEach((_, i) => {
+    responses['likert_' + i] = document.querySelector(`input[name="likert_${i}"]:checked`)?.value || '';
+  });
+
+  console.log('Respuestas enviadas:', responses);
+  console.log('GRUPO ASIGNADO:', vooType);
+  console.log('IP:', responses.ip);
+  console.log('User Agent:', responses.user_agent);
+  
+  const SHEETS_URL = 'https://script.google.com/macros/s/AKfycbz6mqhztYcqARbfFJAn2jiegM6I4hIG96VscSROyNmwgyYQeYEhbniu51IW0Yd_5myp/exec';
+  const btnEnviar = document.querySelector('button[onclick="submitSurvey()"]');
+  if (btnEnviar) { btnEnviar.disabled = true; btnEnviar.textContent = 'Enviando...'; }
+
+  fetch(SHEETS_URL, {
+    method: 'POST',
+    mode: 'no-cors',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(responses)
+  })
+  .catch((err) => {
+    console.error('Error al enviar (pero se continúa):', err);
+  })
+  .finally(() => {
+    goTo(9);
+  });
+}
+
+// Habilitar botón de consentimiento dinámicamente
+function enableConsentButton() {
+  const edad = document.querySelector('input[name="edad_consent"]:checked');
+  const consent = document.querySelector('input[name="consentimiento"]:checked');
+  const btn = document.getElementById('btn-consent');
+  if (btn) {
+    btn.disabled = !(edad && consent);
+  }
+}
+
+// Inicializar
+function init() {
+  renderTweet('tweet-voo', TWEETS[vooType]);
+  renderTweet('tweet-btc', TWEETS_BTC[btcType]);
+  buildLikert();
+  
+  // Información de activos con rangos históricos típicos
+  const infoVOO = { 
+    a: { name: "VOO · S&P 500 ETF", rendimiento: "~10% anual", rango: "-5% a +25%" }, 
+    b: { name: "CETES (renta fija)", rendimiento: "+6%", riesgo: "Sin riesgo" } 
+  };
+  const infoBTC = { 
+    a: { name: "Bitcoin (BTC)", rendimiento: "~12% anual", rango: "-2% a +26%" }, 
+    b: { name: "CETES (renta fija)", rendimiento: "+6%", riesgo: "Sin riesgo" } 
+  };
+  
+  const containerVOO = document.getElementById('asset-info-container-voo');
+  const containerBTC = document.getElementById('asset-info-container-btc');
+  
+  if (containerVOO) {
+    containerVOO.innerHTML = `<div class="asset-card"><div class="asset-name">${infoVOO.a.name}</div><div class="asset-stat">Rendimiento esperado: <span class="up">${infoVOO.a.rendimiento}</span></div><div class="asset-stat">Rango histórico típico: <span>${infoVOO.a.rango}</span></div><div class="asset-stat">Este activo puede generar ganancias o pérdidas</div></div><div class="asset-card"><div class="asset-name">${infoVOO.b.name}</div><div class="asset-stat">Rendimiento fijo: <span class="up">${infoVOO.b.rendimiento}</span></div><div class="asset-stat">Riesgo: <span>${infoVOO.b.riesgo}</span></div></div>`;
+  }
+  
+  if (containerBTC) {
+    containerBTC.innerHTML = `<div class="asset-card"><div class="asset-name">${infoBTC.a.name}</div><div class="asset-stat">Rendimiento esperado: <span class="up">${infoBTC.a.rendimiento}</span></div><div class="asset-stat">Rango histórico típico: <span>${infoBTC.a.rango}</span></div><div class="asset-stat">Este activo puede generar ganancias o pérdidas</div></div><div class="asset-card"><div class="asset-name">${infoBTC.b.name}</div><div class="asset-stat">Rendimiento fijo: <span class="up">${infoBTC.b.rendimiento}</span></div><div class="asset-stat">Riesgo: <span>${infoBTC.b.riesgo}</span></div></div>`;
+  }
+  
+  const labelVOOA = document.getElementById('asset-a-label-voo');
+  const labelVOOB = document.getElementById('asset-b-label-voo');
+  const labelBTCA = document.getElementById('asset-a-label-btc');
+  const labelBTCB = document.getElementById('asset-b-label-btc');
+  
+  if (labelVOOA) labelVOOA.textContent = infoVOO.a.name;
+  if (labelVOOB) labelVOOB.textContent = infoVOO.b.name;
+  if (labelBTCA) labelBTCA.textContent = infoBTC.a.name;
+  if (labelBTCB) labelBTCB.textContent = infoBTC.b.name;
+  
+  // Event listeners para habilitar botón de consentimiento
+  const edadRadios = document.querySelectorAll('input[name="edad_consent"]');
+  const consentRadios = document.querySelectorAll('input[name="consentimiento"]');
+  
+  edadRadios.forEach(radio => radio.addEventListener('change', enableConsentButton));
+  consentRadios.forEach(radio => radio.addEventListener('change', enableConsentButton));
+  
+  enableConsentButton();
+  
+  // Event listeners para campos "Otro"
+  document.getElementById('licenciatura_otra')?.addEventListener('change', toggleLicenciaturaOtro);
+  document.getElementById('semestre_num_otro')?.addEventListener('change', toggleSemestreNumOtro);
+  
+  // Botón de comenzar
+  const startBtn = document.getElementById('startButton');
+  if (startBtn) {
+    startBtn.onclick = function() {
+      goTo(1);
+    };
+  }
+  
+  // Botón de consentimiento
+  const btnConsent = document.getElementById('btn-consent');
+  if (btnConsent) {
+    btnConsent.onclick = submitConsent;
+  }
+}
+
+init();
+</script>
+</body>
+</html>
