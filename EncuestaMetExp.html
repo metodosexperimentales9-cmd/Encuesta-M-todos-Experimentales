@@ -508,7 +508,7 @@ async function getIP() {
   for (const api of apis) {
     try {
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 3000); // Timeout de 3 segundos
+      const timeoutId = setTimeout(() => controller.abort(), 3000);
       const response = await fetch(api, { mode: 'cors', signal: controller.signal });
       clearTimeout(timeoutId);
       const data = await response.json();
@@ -519,32 +519,12 @@ async function getIP() {
       else if (data.origin) ip = data.origin;
       
       if (ip && ip !== 'undefined' && ip !== 'null') {
-        console.log('IP capturada exitosamente:', ip);
+        console.log('IP capturada:', ip);
         return ip;
       }
     } catch (error) {
       console.warn(`Error con API ${api}:`, error);
     }
-  }
-  
-  // Fallback: intentar obtener IP local (solo funciona en algunos navegadores)
-  try {
-    const pc = new RTCPeerConnection({ iceServers: [] });
-    pc.createDataChannel('');
-    pc.createOffer().then(offer => pc.setLocalDescription(offer));
-    pc.onicecandidate = (event) => {
-      if (event.candidate) {
-        const ipRegex = /([0-9]{1,3}\.){3}[0-9]{1,3}/;
-        const match = ipRegex.exec(event.candidate.candidate);
-        if (match) {
-          const localIp = match[0];
-          console.log('IP local capturada (fallback):', localIp);
-          return localIp;
-        }
-      }
-    };
-  } catch (e) {
-    console.warn('No se pudo obtener IP local:', e);
   }
   
   console.warn('No se pudo obtener IP, usando "no_disponible"');
@@ -563,7 +543,6 @@ const LIKERT_ITEMS = [
   "Confío más en expertos tradicionales que en influencers financieros"
 ];
 
-// Funciones de navegación
 function goTo(n) {
   if (n < 0 || n >= totalScreens) return;
   const currentDiv = document.getElementById('screen-' + currentScreen);
@@ -581,7 +560,6 @@ function updateProgress() {
   if (progressBar) progressBar.style.width = pct + '%';
 }
 
-// Funciones de asignación
 function updateVooAllocation(val) {
   const a = parseInt(val);
   const b = 100 - a;
@@ -596,7 +574,6 @@ function updateBtcAllocation(val) {
   document.getElementById('val-b-btc').textContent = b;
 }
 
-// Generar rendimiento aleatorio usando Box-Muller (distribución normal)
 function generateRandomReturn(mean, stdDev) {
   let u = 0, v = 0;
   while(u === 0) u = Math.random();
@@ -605,7 +582,6 @@ function generateRandomReturn(mean, stdDev) {
   return (mean + z * stdDev) / 100;
 }
 
-// Calcular resultados de la simulación
 function calculateResults() {
   const vooA = parseInt(document.getElementById('val-a-voo').textContent) || 0;
   const btcA = parseInt(document.getElementById('val-a-btc').textContent) || 0;
@@ -613,7 +589,6 @@ function calculateResults() {
   const invVOO = vooA;
   const invBTC = btcA;
   
-  // Parámetros: media y desviación estándar (en porcentaje)
   const vooMean = 10;
   const vooStd = 15;
   const btcMean = 12;
@@ -643,7 +618,6 @@ function calculateResults() {
   goTo(8);
 }
 
-// Funciones de renderizado
 function renderTweet(containerId, tweetData) {
   const container = document.getElementById(containerId);
   if (!container) return;
@@ -681,7 +655,6 @@ function buildLikert() {
   });
 }
 
-// Funciones de formulario
 function toggleLicenciaturaOtro() {
   const otraSelected = document.getElementById('licenciatura_otra').checked;
   const container = document.getElementById('licenciatura_otro_container');
@@ -712,7 +685,6 @@ function submitConsent() {
 }
 
 async function submitSurvey() {
-  // Recoger todas las respuestas
   responses.edad = document.getElementById('edad')?.value || '';
   responses.genero = document.querySelector('input[name="genero"]:checked')?.value || '';
   
@@ -743,7 +715,6 @@ async function submitSurvey() {
   responses.riesgo_antes = document.querySelector('input[name="riesgo_antes"]:checked')?.value || '';
   responses.riesgo_despues = document.querySelector('input[name="riesgo_despues"]:checked')?.value || '';
   
-  // Capturar IP y User Agent
   responses.user_agent = getUserAgent();
   responses.ip = await getIP();
   
@@ -752,11 +723,12 @@ async function submitSurvey() {
   });
 
   console.log('Respuestas enviadas:', responses);
-  console.log('GRUPO ASIGNADO:', vooType);
+  console.log('GRUPO:', vooType);
   console.log('IP:', responses.ip);
   console.log('User Agent:', responses.user_agent);
   
-  const SHEETS_URL = 'https://script.google.com/macros/s/AKfycbz6mqhztYcqARbfFJAn2jiegM6I4hIG96VscSROyNmwgyYQeYEhbniu51IW0Yd_5myp/exec';
+  // === NUEVA URL DE GOOGLE SCRIPT ===
+  const SHEETS_URL = 'https://script.google.com/macros/s/AKfycbzNzv5vqywwgEFaBs2DBOMV5I9HBS-pFO5lPAnEsxh1SPC3tjeeFpRjNRsFxxOKShXosw/exec';
   const btnEnviar = document.querySelector('button[onclick="submitSurvey()"]');
   if (btnEnviar) { btnEnviar.disabled = true; btnEnviar.textContent = 'Enviando...'; }
 
@@ -774,7 +746,6 @@ async function submitSurvey() {
   });
 }
 
-// Habilitar botón de consentimiento dinámicamente
 function enableConsentButton() {
   const edad = document.querySelector('input[name="edad_consent"]:checked');
   const consent = document.querySelector('input[name="consentimiento"]:checked');
@@ -784,13 +755,11 @@ function enableConsentButton() {
   }
 }
 
-// Inicializar
 function init() {
   renderTweet('tweet-voo', TWEETS[vooType]);
   renderTweet('tweet-btc', TWEETS_BTC[btcType]);
   buildLikert();
   
-  // Información de activos con rangos históricos típicos
   const infoVOO = { 
     a: { name: "VOO · S&P 500 ETF", rendimiento: "~10% anual", rango: "-5% a +25%" }, 
     b: { name: "CETES (renta fija)", rendimiento: "+6%", riesgo: "Sin riesgo" } 
@@ -821,7 +790,6 @@ function init() {
   if (labelBTCA) labelBTCA.textContent = infoBTC.a.name;
   if (labelBTCB) labelBTCB.textContent = infoBTC.b.name;
   
-  // Event listeners para habilitar botón de consentimiento
   const edadRadios = document.querySelectorAll('input[name="edad_consent"]');
   const consentRadios = document.querySelectorAll('input[name="consentimiento"]');
   
@@ -830,11 +798,9 @@ function init() {
   
   enableConsentButton();
   
-  // Event listeners para campos "Otro"
   document.getElementById('licenciatura_otra')?.addEventListener('change', toggleLicenciaturaOtro);
   document.getElementById('semestre_num_otro')?.addEventListener('change', toggleSemestreNumOtro);
   
-  // Botón de comenzar
   const startBtn = document.getElementById('startButton');
   if (startBtn) {
     startBtn.onclick = function() {
@@ -842,7 +808,6 @@ function init() {
     };
   }
   
-  // Botón de consentimiento
   const btnConsent = document.getElementById('btn-consent');
   if (btnConsent) {
     btnConsent.onclick = submitConsent;
@@ -852,4 +817,4 @@ function init() {
 init();
 </script>
 </body>
-</html>
+</html> 
